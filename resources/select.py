@@ -12,6 +12,5 @@ class Select(Resource):
     def post(self):
         args = self.parser.parse_args()
         return {
-            'timestamp': time.time(),
             'args': args
         }

@@ -1,8 +1,12 @@
 import time
 from flask_restful import Resource, reqparse, abort
 
+from utils.directions import get_all_routes
+from utils.darksky import get_forecast
+from models import Directions, Forecast, Recommendations
 
-def split_coordinates(key, coord):
+
+def _split_coordinates(key, coord):
     coords = coord.split(',')
 
     if len(coords) != 2:
@@ -21,11 +25,32 @@ class Retrieve(Resource):
 
     def get(self):
         args = self.parser.parse_args()
-        to_lat, to_long = split_coordinates('to', args['to'])
-        from_lat, from_long = split_coordinates('from', args['from'])
+        to_coord = _split_coordinates('to', args['to'])
+        from_coord = _split_coordinates('from', args['from'])
+
+        gm_routes = get_all_routes(from_coord, to_coord)
+        ds_forecasts = get_forecast(from_coord, to_coord)
+
+        directions = []
+        for mode, dirs in gm_routes.items():
+            for d in dirs:
+                directions.append(Directions(mode=mode, data=d))
+
+        directions = Directions.objects.bulk_create(directions)
+
+        forecasts = []
+        for forecast in ds_forecasts:
+            forecasts.append(Forecast(lat=forecast['latitude'], long=forecast['longitude'], data=forecast))
+
+        forecasts = Forecast.objects.bulk_create(forecasts)
+
+        recommendations = Recommendations(available=directions, forecast=forecasts)
+        recommendations_id = recommendations.save()
 
         return {
-            'timestamp': time.time(),
-            'to': [to_lat, to_long],
-            'from': [from_lat, from_long]
+            'to': to_coord,
+            'from': from_coord,
+            'directions': gm_routes,
+            'forecast': ds_forecasts,
+            'recommendation_id': str(recommendations_id.pk)
         }
