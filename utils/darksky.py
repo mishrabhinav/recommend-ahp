@@ -6,8 +6,9 @@ _URL = 'https://api.darksky.net/forecast'
 
 
 def _get_single_forecast(coord):
-    lat, long = coord
-    url = '{url}/{key}/{lat},{long}'.format(url=_URL, key=_DARKSKY_KEY, lat=lat, long=long)
+    lat, lng = coord
+    url = '{url}/{key}/{lat},{lng}?exclude=minutely,hourly,daily,alerts,flags'.format(url=_URL, key=_DARKSKY_KEY,
+                                                                                      lat=lat, lng=lng)
 
     resp = requests.get(url)
 

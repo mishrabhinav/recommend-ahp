@@ -17,4 +17,5 @@ def get_all_routes(from_coord, to_coord):
 def get_transit_routes(from_coord, to_coord, mode='walking'):
     return gmaps.directions(origin=from_coord,
                             destination=to_coord,
+                            alternatives=True,
                             mode=mode)

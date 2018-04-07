@@ -4,7 +4,7 @@ from pymodm import MongoModel, fields
 
 class Forecast(MongoModel):
     lat = fields.FloatField(required=True)
-    long = fields.FloatField(required=True)
+    lng = fields.FloatField(required=True)
     data = fields.DictField(required=True)
 
     class Meta:

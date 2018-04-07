@@ -40,7 +40,7 @@ class Retrieve(Resource):
 
         forecasts = []
         for forecast in ds_forecasts:
-            forecasts.append(Forecast(lat=forecast['latitude'], long=forecast['longitude'], data=forecast))
+            forecasts.append(Forecast(lat=forecast['latitude'], lng=forecast['longitude'], data=forecast))
 
         forecasts = Forecast.objects.bulk_create(forecasts)
 
