@@ -11,7 +11,17 @@ def get_geocode(address):
 
 
 def get_all_routes(from_coord, to_coord):
-    return {mode: get_transit_routes(from_coord, to_coord, mode=mode) for mode in MODES}
+    all_routes = []
+    for mode in MODES:
+        routes = []
+        raw_routes = get_transit_routes(from_coord, to_coord, mode=mode)
+        for route in raw_routes:
+            route['_mode'] = mode.upper()
+            routes.append(route)
+
+        all_routes.extend(routes)
+
+    return all_routes
 
 
 def get_transit_routes(from_coord, to_coord, mode='walking'):

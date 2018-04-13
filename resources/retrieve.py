@@ -31,12 +31,11 @@ class Retrieve(Resource):
         gm_routes = get_all_routes(from_coord, to_coord)
         ds_forecasts = get_forecast(from_coord, to_coord)
 
-        directions = []
-        for mode, dirs in gm_routes.items():
-            for d in dirs:
-                directions.append(Directions(mode=mode, data=d))
+        directions = map(lambda x: Directions(mode=x['_mode'], data=x), gm_routes)
+        directions = Directions.objects.bulk_create(list(directions))
 
-        directions = Directions.objects.bulk_create(directions)
+        for idx in range(len(gm_routes)):
+            gm_routes[idx]['_id'] = str(directions[idx])
 
         forecasts = []
         for forecast in ds_forecasts:
