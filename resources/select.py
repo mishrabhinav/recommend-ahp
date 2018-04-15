@@ -1,13 +1,10 @@
-import time
 from bson import ObjectId
 from flask_restful import Resource, reqparse
-from pymodm.context_managers import no_auto_dereference
 
-from models import Recommendations, Directions
+from models import Recommendations
 
 
 class Select(Resource):
-
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('recommendation_id', type=str, help='_id of the recommendation')

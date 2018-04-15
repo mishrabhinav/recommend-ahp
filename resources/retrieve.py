@@ -1,9 +1,8 @@
-import time
 from flask_restful import Resource, reqparse, abort
 
-from utils.directions import get_all_routes
-from utils.darksky import get_forecast
 from models import Directions, Forecast, Recommendations
+from utils.darksky import get_forecast
+from utils.directions import get_all_routes
 
 
 def _split_coordinates(key, coord):
@@ -16,15 +15,16 @@ def _split_coordinates(key, coord):
 
 
 class Retrieve(Resource):
-
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('from', type=str, help='Journey starting co-ordinates')
-        parser.add_argument('to', type=str, help='Journey ending co-ordinates')
+        parser.add_argument('from', type=str, help='Journey starting co-ordinates', required=True)
+        parser.add_argument('to', type=str, help='Journey ending co-ordinates', required=True)
+        parser.add_argument('username', type=str, help='Username of the logged in user', required=True)
         self.parser = parser
 
     def get(self):
         args = self.parser.parse_args()
+
         to_coord = _split_coordinates('to', args['to'])
         from_coord = _split_coordinates('from', args['from'])
 
@@ -37,13 +37,10 @@ class Retrieve(Resource):
         for idx in range(len(gm_routes)):
             gm_routes[idx]['_id'] = str(directions[idx])
 
-        forecasts = []
-        for forecast in ds_forecasts:
-            forecasts.append(Forecast(lat=forecast['latitude'], lng=forecast['longitude'], data=forecast))
+        forecasts = map(lambda f: Forecast(lat=f['latitude'], lng=f['longitude'], data=f), ds_forecasts)
+        forecasts = Forecast.objects.bulk_create(list(forecasts))
 
-        forecasts = Forecast.objects.bulk_create(forecasts)
-
-        recommendations = Recommendations(available=directions, forecast=forecasts)
+        recommendations = Recommendations(available=directions, forecast=forecasts, user=args.username)
         recommendations_id = recommendations.save()
 
         return {

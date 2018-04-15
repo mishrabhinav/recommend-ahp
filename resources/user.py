@@ -1,11 +1,11 @@
-import time
 import datetime
+
 from flask_restful import Resource, reqparse
 
 import models
 
-class User(Resource):
 
+class User(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('username', type=str, help='Desired username of the user')
