@@ -1,9 +1,9 @@
-from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
+from pymongo.write_concern import WriteConcern
 
 
 class Directions(MongoModel):
-    mode = fields.CharField(choices=('walking', 'driving', 'bicycling', 'transit'), required=True)
+    mode = fields.CharField(choices=('WALKING', 'DRIVING', 'BICYCLING', 'TRANSIT'), required=True)
     data = fields.DictField(required=True)
 
     class Meta:
