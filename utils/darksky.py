@@ -1,5 +1,6 @@
-import requests
 from os import environ as env
+
+import requests
 
 _DARKSKY_KEY = env['DARKSKY_KEY']
 _URL = 'https://api.darksky.net/forecast'

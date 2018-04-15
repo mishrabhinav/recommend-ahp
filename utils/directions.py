@@ -1,5 +1,6 @@
-import googlemaps
 from os import environ as env
+
+import googlemaps
 
 gmaps = googlemaps.Client(key=env['GMAPS_KEY'])
 
