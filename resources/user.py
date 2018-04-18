@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from flask_restful import Resource, reqparse
 
@@ -16,12 +16,8 @@ class User(Resource):
 
     def post(self):
         args = self.parser.parse_args()
-        user = models.User(username=args.username,
-                           first_name=args.first_name,
-                           last_name=args.last_name,
-                           email=args.email,
-                           created_on=datetime.datetime.now(),
-                           modified_on=datetime.datetime.now())
+        user = models.User(username=args.username, first_name=args.first_name, last_name=args.last_name,
+                           email=args.email, created_on=datetime.utcnow(), modified_on=datetime.utcnow())
 
         user.save()
 
@@ -33,12 +29,8 @@ class User(Resource):
         args = self.parser.parse_args()
 
         for user in models.User.objects.raw({'_id': args.username}):
-            models.User(username=user.username,
-                        first_name=args.first_name,
-                        last_name=args.last_name,
-                        email=args.email,
-                        created_on=user.created_on,
-                        modified_on=datetime.datetime.now()).save()
+            models.User(username=user.username, first_name=args.first_name, last_name=args.last_name, email=args.email,
+                        created_on=user.created_on, modified_on=datetime.utcnow()).save()
 
         return {
             'username': args.username
