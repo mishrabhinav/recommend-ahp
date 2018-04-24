@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask_restful import Resource, reqparse, abort
 
 from models import Directions, Forecast, Recommendations
@@ -40,7 +42,8 @@ class Retrieve(Resource):
         forecasts = map(lambda f: Forecast(lat=f['latitude'], lng=f['longitude'], data=f), ds_forecasts)
         forecasts = Forecast.objects.bulk_create(list(forecasts))
 
-        recommendations = Recommendations(available=directions, forecast=forecasts, user=args.username)
+        recommendations = Recommendations(available=directions, forecast=forecasts, user=args.username,
+                                          created_on=datetime.utcnow())
         recommendations_id = recommendations.save()
 
         return {
