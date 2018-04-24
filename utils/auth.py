@@ -1,13 +1,20 @@
+from os import environ as env
 from functools import wraps
+import json
 
-from jose import jwt
 import requests
+import redis
 from flask import request, _request_ctx_stack
 from flask_restful import abort
+from jose import jwt
 
 AUTH0_DOMAIN = 'recommend-app.eu.auth0.com'
 API_AUDIENCE = 'https://recommend-api.herokuapp.com'
 ALGORITHMS = ['RS256']
+JWKS_EXPIRE = 600
+
+
+cache = redis.from_url(env['REDIS_URL'])
 
 
 def _get_token_auth_header():
@@ -33,10 +40,18 @@ def _get_token_auth_header():
 def requires_auth(f):
     """Determines if the Access Token is valid
     """
+
     @wraps(f)
     def decorated(*args, **kwargs):
         token = _get_token_auth_header()
-        jwks = requests.get('https://{}/.well-known/jwks.json'.format(AUTH0_DOMAIN)).json()
+
+        jwks_raw = cache.get('auth0_jwks')
+        if not jwks_raw:
+            jwks = requests.get('https://{}/.well-known/jwks.json'.format(AUTH0_DOMAIN)).json()
+            cache.set('auth0_jwks', json.dumps(jwks), JWKS_EXPIRE)
+        else:
+            jwks = json.loads(jwks_raw)
+
         unverified_header = jwt.get_unverified_header(token)
         rsa_key = {}
         for key in jwks["keys"]:
