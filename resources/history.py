@@ -1,18 +1,16 @@
-from flask_restful import Resource, reqparse
+from flask import _request_ctx_stack
+from flask_restful import Resource
 
 from models import Recommendations
+from utils.auth import requires_auth
 
 
 class History(Resource):
-    def __init__(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('username', type=str, help='username to retrieve the history for', required=True)
-        self.parser = parser
-
+    @requires_auth
     def get(self):
-        args = self.parser.parse_args()
+        username = _request_ctx_stack.top.current_user['sub']
 
-        recommendations = Recommendations.objects.raw({'user': args.username}).exclude('forecast', 'available')
+        recommendations = Recommendations.objects.raw({'user': username}).exclude('forecast', 'available')
 
         history = []
         for recommendation in recommendations:
@@ -26,6 +24,6 @@ class History(Resource):
             })
 
         return {
-            'username': args.username,
+            'username': username,
             'history': history
         }

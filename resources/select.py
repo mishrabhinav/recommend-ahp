@@ -2,6 +2,7 @@ from bson import ObjectId
 from flask_restful import Resource, reqparse
 
 from models import Recommendations
+from utils.auth import requires_auth
 
 
 class Select(Resource):
@@ -11,6 +12,7 @@ class Select(Resource):
         parser.add_argument('select', type=str, help='_id of the selected directions')
         self.parser = parser
 
+    @requires_auth
     def post(self):
         args = self.parser.parse_args()
         updated = False
