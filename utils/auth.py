@@ -1,12 +1,12 @@
 from functools import wraps
 
-import jwt
+from jose import jwt
 import requests
 from flask import request, _request_ctx_stack
 from flask_restful import abort
 
 AUTH0_DOMAIN = 'recommend-app.eu.auth0.com'
-API_AUDIENCE = ['https://recommend-api.herokuapp.com', 'https://recommend-app.eu.auth0.com/userinfo']
+API_AUDIENCE = 'https://recommend-api.herokuapp.com'
 ALGORITHMS = ['RS256']
 
 
@@ -59,7 +59,7 @@ def requires_auth(f):
                 )
             except jwt.ExpiredSignatureError:
                 abort(401, code="token_expired", description="token is expired")
-            except jwt.DecodeError:
+            except jwt.JWTClaimsError:
                 abort(401, code="decode_error", description="decoding token threw errors")
             except Exception:
                 abort(401, code="invalid_header", description="Unable to parse auth token")
