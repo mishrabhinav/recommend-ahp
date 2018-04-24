@@ -6,9 +6,7 @@ from pymodm import connect
 
 from resources import Index, Retrieve, Select, User, History
 
-connect("mongodb://{}:{}@{}:{}/{}".format(env['MONGO_USER'], env['MONGO_PASS'], env['MONGO_IP'],
-                                          env['MONGO_PORT'],
-                                          env['MONGO_DB']), alias="recommend-ahp")
+connect(env['MONGODB_URI'], alias='recommend-ahp')
 
 app = Flask(__name__)
 api = Api(app)
