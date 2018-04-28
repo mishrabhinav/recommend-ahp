@@ -4,9 +4,10 @@ from flask import _request_ctx_stack
 from flask_restful import Resource, reqparse, abort
 
 from models import Directions, Forecast, Recommendations
+from utils.ahp import run_ahp
+from utils.auth import requires_auth
 from utils.darksky import get_forecast
 from utils.directions import get_all_routes
-from utils.auth import requires_auth
 
 
 def _split_coordinates(key, coord):
@@ -16,6 +17,18 @@ def _split_coordinates(key, coord):
         abort(400, message='{} co-ordinates incorrect'.format(key))
 
     return float(coords[0]), float(coords[1])
+
+
+def _prioritize(directions, forecast):
+    priorities = run_ahp([str(index) for index, _ in enumerate(directions)])
+
+    prioritized_directions = []
+    for idx, dir in enumerate(directions):
+        dir['_priority'] = priorities[idx]
+
+        prioritized_directions.append(dir)
+
+    return prioritized_directions
 
 
 class Retrieve(Resource):
@@ -33,10 +46,12 @@ class Retrieve(Resource):
         from_coord = _split_coordinates('from', args['from'])
         username = _request_ctx_stack.top.current_user['sub']
 
-        gm_routes = get_all_routes(from_coord, to_coord)
+        gm_routes = get_all_routes(from_coord, to_coord, limit=8)
         ds_forecasts = get_forecast(from_coord, to_coord)
 
-        directions = map(lambda x: Directions(mode=x['_mode'], data=x), gm_routes)
+        gm_routes = _prioritize(gm_routes, ds_forecasts)
+
+        directions = map(lambda x: Directions(mode=x['_mode'], data=x, priority=x['_priority']), gm_routes)
         directions = Directions.objects.bulk_create(list(directions))
 
         for idx in range(len(gm_routes)):
