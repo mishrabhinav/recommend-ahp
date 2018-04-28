@@ -1,37 +1,42 @@
 from datetime import datetime
 
+from flask import _request_ctx_stack
 from flask_restful import Resource, reqparse
+from pymodm.errors import DoesNotExist
 
 import models
+from matrix.core import DEFAULT_SETTINGS
+from utils.auth import requires_auth
 
 
 class User(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('username', type=str, help='Desired username of the user')
-        parser.add_argument('first_name', type=str, help='First name of the user')
-        parser.add_argument('last_name', type=str, help='Last name of the user')
-        parser.add_argument('email', type=str, help='Email address of the user')
+        parser.add_argument('settings', type=dict, help='user settings')
         self.parser = parser
 
+    @requires_auth
+    def get(self):
+        username = _request_ctx_stack.top.current_user['sub']
+
+        try:
+            settings = models.Settings.objects.get({'username': username})
+            return settings.data
+        except DoesNotExist:
+            return DEFAULT_SETTINGS
+
+    @requires_auth
     def post(self):
-        args = self.parser.parse_args()
-        user = models.User(username=args.username, first_name=args.first_name, last_name=args.last_name,
-                           email=args.email, created_on=datetime.utcnow(), modified_on=datetime.utcnow())
-
-        user.save()
-
-        return {
-            'username': args.username
-        }
-
-    def put(self):
+        username = _request_ctx_stack.top.current_user['sub']
         args = self.parser.parse_args()
 
-        for user in models.User.objects.raw({'_id': args.username}):
-            models.User(username=user.username, first_name=args.first_name, last_name=args.last_name, email=args.email,
-                        created_on=user.created_on, modified_on=datetime.utcnow()).save()
+        try:
+            settings = models.Settings.objects.get({'username': username})
+            settings.last_modified = datetime.utcnow()
+            settings.data = args.settings
+        except DoesNotExist:
+            settings = models.Settings(username=username, data=args.settings, last_modified=datetime.utcnow())
 
-        return {
-            'username': args.username
-        }
+        settings.save()
+
+        return settings.data
