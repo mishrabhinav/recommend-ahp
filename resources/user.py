@@ -6,31 +6,7 @@ from pymodm.errors import DoesNotExist
 
 import models
 from utils.auth import requires_auth
-
-DEFAULT_SETTINGS = {
-    'distance': [3000, 6000],
-    'duration': [1200, 1800],
-    'WALKING': {
-        'show': True,
-        'distance': [1000, 2500],
-        'duration': [600, 1200]
-    },
-    'BICYCLING': {
-        'show': True,
-        'distance': [2000, 4000],
-        'duration': [600, 1200]
-    },
-    'DRIVING': {
-        'show': True,
-        'distance': [3000, 6000],
-        'duration': [600, 1200]
-    },
-    'TRANSIT': {
-        'show': True,
-        'distance': [3000, 6000],
-        'duration': [600, 1200]
-    }
-}
+from matrix.core import DEFAULT_SETTINGS
 
 
 class User(Resource):
