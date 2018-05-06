@@ -20,7 +20,7 @@ def _split_coordinates(key, coord):
 
 
 def _prioritize(directions, forecast):
-    priorities = run_ahp([str(index) for index, _ in enumerate(directions)])
+    priorities = run_ahp(directions, forecast)
 
     prioritized_directions = []
     for idx, dir in enumerate(directions):
