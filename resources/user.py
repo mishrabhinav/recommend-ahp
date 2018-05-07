@@ -23,6 +23,9 @@ class User(Resource):
             settings = models.Settings.objects.get({'username': username})
             return settings.data
         except DoesNotExist:
+            settings = models.Settings(username=username, data=DEFAULT_SETTINGS, last_modified=datetime.utcnow())
+            settings.save()
+
             return DEFAULT_SETTINGS
 
     @requires_auth
