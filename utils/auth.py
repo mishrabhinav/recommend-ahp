@@ -11,7 +11,7 @@ from jose import jwt
 AUTH0_DOMAIN = 'recommend-app.eu.auth0.com'
 API_AUDIENCE = 'https://recommend-api.herokuapp.com'
 ALGORITHMS = ['RS256']
-JWKS_EXPIRE = 600
+JWKS_EXPIRE = 3600
 
 
 cache = redis.from_url(env['REDIS_URL'])
