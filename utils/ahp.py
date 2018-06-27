@@ -24,8 +24,7 @@ def _construct_preference_matrix(rule_matrix: Matrix, criterion, alternatives, f
     return pm
 
 
-def run_ahp(alternatives: list, forecasts, settings=DEFAULT_SETTINGS):
-    username = _request_ctx_stack.top.current_user['sub']
+def _run_individual_ahp(username, alternatives: list, forecasts, settings=DEFAULT_SETTINGS):
     rules = Rules.objects.raw({'user': username}).order_by([('created_on', DESCENDING)]).limit(1)
 
     if rules.count():
@@ -52,3 +51,24 @@ def run_ahp(alternatives: list, forecasts, settings=DEFAULT_SETTINGS):
     }
 
     return pyahp.parse(model_dict).get_priorities()
+
+
+def run_ahp(alternatives: list, forecasts, group, settings=DEFAULT_SETTINGS):
+    group_priorities = []
+
+    for user in group:
+        group_priorities.append(_run_individual_ahp(user, alternatives, forecasts, settings))
+
+    num_users = len(group)
+    num_alternatives = len(alternatives)
+
+    results = []
+
+    for i in range(num_alternatives):
+        pref = 1
+        for j in range(num_users):
+            pref *= group_priorities[j][i]**(1/num_users)
+
+        results.append(pref)
+
+    return results

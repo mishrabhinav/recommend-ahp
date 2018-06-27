@@ -19,8 +19,8 @@ def _split_coordinates(key, coord):
     return float(coords[0]), float(coords[1])
 
 
-def _prioritize(directions, forecast):
-    priorities = run_ahp(directions, forecast)
+def _prioritize(directions, forecast, group_users):
+    priorities = run_ahp(directions, forecast, group_users)
 
     prioritized_directions = []
     for idx, dir in enumerate(directions):
@@ -36,20 +36,25 @@ class Retrieve(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('from', type=str, help='Journey starting co-ordinates', required=True)
         parser.add_argument('to', type=str, help='Journey ending co-ordinates', required=True)
+        parser.add_argument('group', type=str, default='', help='Group of users involved in the trip', required=False)
         self.parser = parser
 
     @requires_auth
     def get(self):
         args = self.parser.parse_args()
 
+        username = _request_ctx_stack.top.current_user['sub']
+        if len(args['group']) > 0:
+            username = '{},google-oauth2|115549898808101015485'.format(username)
+
         to_coord = _split_coordinates('to', args['to'])
         from_coord = _split_coordinates('from', args['from'])
-        username = _request_ctx_stack.top.current_user['sub']
+        group_users = username.split(',')
 
         gm_routes = get_all_routes(from_coord, to_coord, limit=8)
         ds_forecasts = get_forecast(from_coord, to_coord)
 
-        gm_routes = _prioritize(gm_routes, ds_forecasts)
+        gm_routes = _prioritize(gm_routes, ds_forecasts, group_users)
 
         directions = map(lambda x: Directions(mode=x['_mode'], data=x, priority=x['_priority']), gm_routes)
         directions = Directions.objects.bulk_create(list(directions))
